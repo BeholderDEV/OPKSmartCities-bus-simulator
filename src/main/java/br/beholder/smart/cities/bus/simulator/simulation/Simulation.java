@@ -82,18 +82,22 @@ public class Simulation {
 			System.out.println("Simulating...");
 
 			for (BusAssignment assignment : assignments) {
-				updateBusState(assignment);
+				if (assignment.bus.number.equals(342L) || assignment.bus.number.equals(352L) || assignment.bus.number.equals(371L)) {
+					updateBusState(assignment);
+				}
+
 			}
 
-			Thread.sleep(5000);
+			Thread.sleep(1000);
 		}
 	}
 
 	private void updateBusState(BusAssignment busAssignment) throws Exception {
 
-		if (System.currentTimeMillis() < busAssignment.nextUpdate) {
-			return;
-		}
+//		if (System.currentTimeMillis() < busAssignment.nextUpdate) {
+//			System.out.println("Skipping, time remaining: " + (busAssignment.nextUpdate - System.currentTimeMillis()));
+//			return;
+//		}
 
 		int passengerAmount = 20;
 
@@ -124,20 +128,19 @@ public class Simulation {
 		SmartCities.addPassengers(bus, passengersIn);
 		SmartCities.removePassengers(bus, passengersOut);
 
-		int nextWayPointIndex = (busAssignment.currentWaypointIndex + 1) % busAssignment.schedule.waypoints.size();
-		Waypoint nextWaypoint = busAssignment.schedule.waypoints.get(nextWayPointIndex);
-
-		try
-		{
-			GeolocationData geolocationData = GoogleMaps.calculateDistance(mapsApiKey, bus.position, nextWaypoint);
-	
-			busAssignment.nextUpdate = System.currentTimeMillis() + (geolocationData.durationInSeconds * 1000L)
-					+ random.nextInt(61000);
-		}
-		catch (Exception e) {
-			busAssignment.nextUpdate = System.currentTimeMillis() + random.nextInt(61000);
-		}
-		
+//		int nextWayPointIndex = (busAssignment.currentWaypointIndex + 1) % busAssignment.schedule.waypoints.size();
+//		Waypoint nextWaypoint = busAssignment.schedule.waypoints.get(nextWayPointIndex);
+//
+//		try
+//		{
+//			GeolocationData geolocationData = GoogleMaps.calculateDistance(mapsApiKey, bus.position, nextWaypoint);
+//	
+//			busAssignment.nextUpdate = System.currentTimeMillis() + (geolocationData.durationInSeconds * 1000L);
+////			busAssignment.nextUpdate = busAssignment.nextUpdate + random.nextInt(61000);
+//		}
+//		catch (Exception e) {
+//			busAssignment.nextUpdate = System.currentTimeMillis() + random.nextInt(10000);
+//		}
 
 //			System.out.println("Bus #" + bus.number);
 //			System.out.println("Passengers out: " + passengersOut);
@@ -157,35 +160,39 @@ public class Simulation {
 
 		for (Bus bus : buses) {
 
-			while (true) {
-				TrackSchedule schedule = availableSchedules.get(random.nextInt(availableSchedules.size()));
-				int departureIndex = random.nextInt(schedule.departureTimes.size());
+			if (bus.number.equals(342L) || bus.number.equals(352L) || bus.number.equals(371L)) {
+				System.out.println("Assigning buses...");
 
-				String departureTime = schedule.departureTimes.get(departureIndex);
-				String id = schedule.id + departureTime;
+				while (true) {
+					TrackSchedule schedule = availableSchedules.get(random.nextInt(availableSchedules.size()));
+					int departureIndex = random.nextInt(schedule.departureTimes.size());
 
-				if (!assignedIds.contains(id)) {
+					String departureTime = schedule.departureTimes.get(departureIndex);
+					String id = schedule.id + departureTime;
 
-					int waypointIndex = random.nextInt(schedule.waypoints.size());
+					if (!assignedIds.contains(id)) {
 
-					BusAssignment assignment = new BusAssignment();
+						int waypointIndex = random.nextInt(schedule.waypoints.size());
 
-					bus.schedule = new BusShcedule();
-					bus.schedule.departureTime = departureTime;
-					bus.schedule.scheduleId = schedule.id;
-					bus.position = schedule.waypoints.get(waypointIndex);
+						BusAssignment assignment = new BusAssignment();
 
-					assignment.bus = bus;
-					assignment.schedule = schedule;
-					assignment.currentWaypointIndex = waypointIndex;
-					assignment.nextUpdate = 0L;
+						bus.schedule = new BusShcedule();
+						bus.schedule.departureTime = departureTime;
+						bus.schedule.scheduleId = schedule.id;
+						bus.position = schedule.waypoints.get(waypointIndex);
 
-					assignedIds.add(id);
-					assignments.add(assignment);
+						assignment.bus = bus;
+						assignment.schedule = schedule;
+						assignment.currentWaypointIndex = waypointIndex;
+						assignment.nextUpdate = 0L;
 
-					SmartCities.update(assignment.bus);
+						assignedIds.add(id);
+						assignments.add(assignment);
 
-					break;
+						SmartCities.update(assignment.bus);
+
+						break;
+					}
 				}
 			}
 		}
